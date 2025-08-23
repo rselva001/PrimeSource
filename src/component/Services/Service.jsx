@@ -751,10 +751,12 @@ export default function ServicesPage() {
             title="Our Complete Service Portfolio"
             subtitle="Beyond development, we offer comprehensive digital marketing and HR solutions to support your business growth"
             center
+            
           />
 
           <div className="space-y-20">
             {/* Digital Marketing */}
+
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Digital Marketing Services</h3>
               <p className="text-gray-600 mb-10">Enhance your online presence and reach your target audience with our comprehensive digital marketing solutions.</p>

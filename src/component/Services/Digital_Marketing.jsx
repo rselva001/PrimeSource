@@ -711,18 +711,9 @@ export default function DigitalMarketingPage() {
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Get a Free Consultation
+                  Get Started Today
                 </motion.button>
-                <motion.button 
-                  className="bg-transparent hover:bg-white/10 text-white border-2 border-white/80 font-semibold py-4 px-8 rounded-xl transition-colors duration-300"
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px -10px rgba(255, 255, 255, 0.2)"
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  View Our Portfolio
-                </motion.button>
+              
               </motion.div>
             </div>
           </motion.div>

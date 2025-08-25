@@ -748,7 +748,7 @@ export default function ServicesPage() {
       <section className="py-24 px-6 lg:px-8 bg-gradient-to-br from-emerald-100/50 to-cyan-100/50 rounded-3xl mx-4 lg:mx-8">
         <div className="max-w-7xl mx-auto">
           <SectionHeader
-            title="Our Complete Service Portfolio"
+            title="Our Complete Service "
             subtitle="Beyond development, we offer comprehensive digital marketing and HR solutions to support your business growth"
             center
             

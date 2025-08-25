@@ -1,56 +1,109 @@
 import { useEffect, useState, useRef } from "react";
-import { NavLink } from "react-router-dom"; 
-import logo from "../../assets/logo.png";
-import logoWhite from "../../assets/logo.png"; // ✅ Make sure you have a real white logo file
+import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/solid";
+
+// Assuming you have two distinct logos for light and dark backgrounds
+import logo from "../../assets/logo.png"; // Your standard color logo
+// For the best result, create a white version of your logo and link it here
+import logoWhite from "../../assets/logo.png"; 
+
+// Animated Hamburger/Close Icon Component
+const MenuToggle = ({ toggle, scrolled, open }) => {
+  const strokeColor = open ? "white" : scrolled ? "black" : "white";
+  return (
+    <button
+      onClick={toggle}
+      className="md:hidden focus:outline-none z-50 relative w-8 h-8"
+      aria-label="Toggle menu"
+    >
+      <motion.div
+        animate={open ? "open" : "closed"}
+        initial={false}
+        className="w-full h-full flex flex-col justify-center items-center"
+      >
+        <motion.span
+          variants={{
+            closed: { y: 0, rotate: 0 },
+            open: { y: 6, rotate: 45 },
+          }}
+          transition={{ duration: 0.2 }}
+          className="block w-6 h-0.5"
+          style={{ background: strokeColor }}
+        ></motion.span>
+        <motion.span
+          variants={{
+            closed: { opacity: 1, transition: { delay: 0.2 } },
+            open: { opacity: 0 },
+          }}
+          className="block w-6 h-0.5 my-1.5"
+          style={{ background: strokeColor }}
+        ></motion.span>
+        <motion.span
+          variants={{
+            closed: { y: 0, rotate: 0 },
+            open: { y: -6, rotate: -45 },
+          }}
+          transition={{ duration: 0.2 }}
+          className="block w-6 h-0.5"
+          style={{ background: strokeColor }}
+        ></motion.span>
+      </motion.div>
+    </button>
+  );
+};
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const [softwareOpen, setSoftwareOpen] = useState(false);
-  const [digitalOpen, setDigitalOpen] = useState(false);
-  const [hrOpen, setHrOpen] = useState(false);
-  const [payrollOpen, setPayrollOpen] = useState(false);
-  const [jobSeekerOpen, setJobSeekerOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
-  // ✅ useRef instead of state for scroll position
+  const dropdownTimeoutRef = useRef(null);
+  const resizeTimeoutRef = useRef(null);
   const scrollPositionRef = useRef(0);
 
+  // --- HOOKS ---
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile && open) setOpen(false);
     };
+    checkMobile();
+
+    const handleResize = () => {
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+      resizeTimeoutRef.current = setTimeout(checkMobile, 150);
+    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+
+    window.addEventListener("resize", handleResize);
     window.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("resize", checkMobile);
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleScroll);
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
     };
-  }, []);
+  }, [open]);
 
-  // ✅ Fix scroll lock when menu opens
   useEffect(() => {
     if (open) {
-      scrollPositionRef.current = window.scrollY; // save position instantly
+      scrollPositionRef.current = window.scrollY;
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.width = "100%";
     } else {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = "";
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
-      window.scrollTo(0, scrollPositionRef.current); // restore correctly
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
-
     return () => {
       document.body.style.overflow = "";
       document.body.style.position = "";
@@ -59,351 +112,214 @@ export default function Navbar() {
     };
   }, [open]);
 
-  // Close all dropdowns when menu closes
-  useEffect(() => {
-    if (!open) {
-      setServicesOpen(false);
-      setSoftwareOpen(false);
-      setDigitalOpen(false);
-      setHrOpen(false);
-      setPayrollOpen(false);
-      setJobSeekerOpen(false);
-    }
-  }, [open]);
+  // --- EVENT HANDLERS ---
+  const handleMouseEnter = (dropdown) => {
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+    setActiveDropdown(dropdown);
+  };
 
-  const textColorStyle = isMobile
-    ? { color: scrolled ? "black" : "white" }
-    : { color: scrolled ? "rgba(0,0,0,0.9)" : "white" };
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150);
+  };
+
+  // --- DATA & VARIANTS ---
+  const textColorStyle = scrolled ? { color: "rgba(0,0,0,0.9)" } : { color: "white" };
+
+  const mobileMenuVariants = {
+    open: { x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+    closed: { x: "-100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+  };
+
+  const mobileLinkContainerVariants = {
+    open: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
+    closed: { transition: { staggerChildren: 0.05, staggerDirection: -1 } },
+  };
+
+  const mobileLinkVariants = {
+    open: { y: 0, opacity: 1, transition: { y: { stiffness: 1000, velocity: -100 } } },
+    closed: { y: 50, opacity: 0, transition: { y: { stiffness: 1000 } } },
+  };
+
+  const services = [
+    {
+      title: "Software Development",
+      path: "/Services/Development",
+      subItems: [
+        { title: "Website Development", path: "/Services/Development/Website" },
+        { title: "Web Application Development", path: "/Services/Development/Web-App" },
+        { title: "Mobile Application", path: "/Services/Development/Mobile-App" },
+      ],
+    },
+    {
+      title: "Digital Marketing",
+      path: "/Services/Digital_Marketing",
+      subItems: [
+        { title: "SEO", path: "/Services/Digital_Marketing" },
+        { title: "SMM", path: "/Services/Digital_Marketing" },
+        { title: "SEM", path: "/Services/Digital_Marketing" },
+        { title: "Content Writing", path: "/Services/Digital_Marketing" },
+      ],
+    },
+    {
+      title: "HR Consulting",
+      path: "/Services/HR_Consulting",
+      subItems: [
+        { title: "Global Recruitment", path: "/Services/HR_Consulting/Recruitment" },
+        { title: "Staffing Service", path: "/Services/HR_Consulting/Staffing" },
+        { title: "Contract Staffing", path: "/Services/HR_Consulting/Contract-Staffing" },
+      ],
+    },
+    {
+      title: "Payroll Service",
+      path: "/Services/PayRoll",
+      subItems: [
+        { title: "Payroll Management", path: "/Services/PayRoll/Management" },
+        { title: "Payroll Outsourcing", path: "/Services/PayRoll/Outsourcing" },
+      ],
+    },
+  ];
 
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300
-      ${open ? "bg-transparent" : scrolled ? "bg-transparent backdrop-blur-md" : "bg-[#062925]"}`}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
-        {/* Main Logo */}
-        <NavLink to="/Home" className="flex items-center gap-2" style={textColorStyle}>
-          <img src={logo} alt="PrimeSource Logo" className="w-30 mb-0" />
-        </NavLink>
+    <>
+      <nav
+        className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
+          scrolled ? "bg-white/80 backdrop-blur-md shadow-md" : "bg-[#062925]"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
+          <NavLink to="/Home" onClick={() => setOpen(false)}>
+            <img
+              src={scrolled ? logo : logoWhite}
+              alt="PrimeSource Logo"
+              className="w-32 md:w-30 h-auto transition-all duration-300"
+            />
+          </NavLink>
+          
 
-        {/* Desktop contact */}
-        <div className="hidden md:flex items-center space-x-15 text-sm" style={textColorStyle}>
-          <a href="tel:8190901250" className="flex items-center gap-1 hover:underline">
-            <FaPhoneAlt />
-            <span>+91 8190901250</span>
-          </a>
-          <a href="mailto:connect@primesourcellp.com" className="flex items-center gap-1 hover:underline">
-            <FaEnvelope />
-            <span>connect@primesourcellp.com</span>
-          </a>
-        </div>
+          <div className="flex items-center">
+            <div className="hidden md:flex space-x-7 items-center">
+               <div className={`hidden lg:flex items-center space-x-4 text-sm ml-6 pl-6 border-l ${scrolled ? 'border-gray-300' : 'border-gray-500/50'}`}>
+              <a href="tel:8190901250" className="flex items-center gap-2 hover:underline" style={textColorStyle}>
+                <FaPhoneAlt /> +91 8190901250
+              </a>
+              <a href="mailto:connect@primesourcellp.com" className="flex items-center gap-2 hover:underline" style={textColorStyle}>
+                <FaEnvelope /> connect@primesourcellp.com
+              </a>
+            </div>
+              <NavLink to="/Home" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>Home</NavLink>
+              <NavLink to="/About" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>About</NavLink>
 
-        {/* Mobile toggle */}
-        {!open && (
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Toggle navigation"
-            className="md:hidden block focus:outline-none z-50"
-            style={textColorStyle}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
+              <div className="relative" onMouseEnter={() => handleMouseEnter("services")} onMouseLeave={handleMouseLeave}>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-  initial={{ x: "-100%" }}
-  animate={{ x: 0 }}
-  exit={{ x: "-100%" }}
-  transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-  className="md:hidden fixed top-0 left-0 w-full h-full z-50 flex flex-col bg-[#062925] text-white overflow-y-auto"
->
 
-              <div className="flex justify-between items-center p-6 sticky top-0 bg-transparent z-10">
-                {/* ✅ Use real white logo */}
-                <NavLink to="/Home" onClick={() => setOpen(false)}>
-                  <img src={logoWhite} alt="PrimeSource Logo" className="w-28" />
+                <NavLink to="/Services" className="flex items-center gap-1 hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>
+                  Services 
                 </NavLink>
-                <button onClick={() => setOpen(false)} aria-label="Close menu" className="text-white">
-                  <motion.svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    whileHover={{ rotate: 90, scale: 1.2 }}
-                    whileTap={{ scale: 0.9, rotate: 180 }}
-                  >
-                    <path d="M6 18L18 6M6 6l12 12" />
-                  </motion.svg>
+                <AnimatePresence>
+                  {activeDropdown === "services" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full -left-4 mt-2 bg-white shadow-lg rounded-md w-64 text-black p-2"
+                    >
+                      {services.map((service) => (
+                        <div key={service.title} className="relative group">
+                          <NavLink to={service.path} className="flex justify-between items-center w-full px-4 py-2 text-left hover:bg-gray-100 rounded-md">
+                            {service.title} <span className="text-xs">→</span>
+                          </NavLink>
+                          <div className="absolute hidden group-hover:block left-full -top-2 bg-white shadow-lg rounded-md w-64 p-2">
+                            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: 0.1 }}>
+                              {service.subItems.map((item) => (
+                                <NavLink key={item.title} to={item.path} className="block px-4 py-2 hover:bg-gray-100 rounded-md">
+                                  {item.title}
+                                </NavLink>
+                              ))}
+                            </motion.div>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <NavLink to="/Job-seeker" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>Job Seeker</NavLink>
+              <NavLink to="/Career" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>Career</NavLink>
+              <NavLink to="/Testimonial" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>Testimonial</NavLink>
+              <NavLink to="/Contact" className="hover:text-[#b8e1dd] transition-colors" style={textColorStyle}>Contact</NavLink>
+            </div>
+
+           
+
+            <div className="md:hidden ml-4">
+              <MenuToggle toggle={() => setOpen(!open)} scrolled={scrolled} open={open} />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <AnimatePresence>
+        {open && isMobile && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} className="fixed inset-0 bg-black/50 z-30" />
+            <motion.div variants={mobileMenuVariants} initial="closed" animate="open" exit="closed" className="fixed top-0 left-0 w-full h-screen bg-[#062925] text-white z-40 flex flex-col">
+              <div className="flex justify-between items-center p-4 h-[80px]">
+                <NavLink to="/Home" onClick={() => setOpen(false)}>
+                  <img src={logoWhite} alt="PrimeSource Logo" className="w-32 md:w-40 h-auto" />
+                </NavLink>
+                <button onClick={() => setOpen(false)} className="p-2" aria-label="Close menu">
+                  <XMarkIcon className="w-8 h-8 text-white" />
                 </button>
               </div>
-              {/* Mobile contact info */}
-              <div className="flex flex-col space-y-4 mb-6 px-6">
-                <a href="tel: 8190901250" className="flex items-center gap-2 text-white">
-                  <FaPhoneAlt />
-                  <span>+91 8190901250</span>
-                </a>
-                <a href="mailto:connect@primesourcellp.com" className="flex items-center gap-2 text-white">
-                  <FaEnvelope />
-                  <span>connect@primesourcellp.com</span>
-                </a>
-              </div>
 
-              {/* Mobile links */}
-              <div className="space-y-0 px-6 overflow-y-auto flex-grow pb-6">
-                <NavLink 
-                  to="/Home" 
-                  onClick={() => setOpen(false)} 
-                  className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300"
-                >
-                  Home
-                </NavLink>
-                <NavLink 
-                  to="/About" 
-                  onClick={() => setOpen(false)} 
-                  className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300"
-                >
-                  About
-                </NavLink>
+              <motion.div variants={mobileLinkContainerVariants} className="flex flex-col space-y-2 px-6 text-lg overflow-y-auto flex-grow">
+                <motion.div variants={mobileLinkVariants}><NavLink to="/Home" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">Home</NavLink></motion.div>
+                <motion.div variants={mobileLinkVariants}><NavLink to="/About" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">About</NavLink></motion.div>
 
-                {/* Services Section */}
-                <div className="py-4 border-b border-white/20">
-                  {/* Main Services Link */}
+                {/* Services - ALWAYS VISIBLE */}
+               <motion.div variants={mobileLinkVariants}>
+                <div className="border-b border-white/20 py-3">
                   <NavLink
                     to="/Services"
                     onClick={() => setOpen(false)}
-                    className="flex justify-between items-center w-full text-white text-lg hover:text-[#b8e1dd] transition-colors duration-300"
+                    className="block py-2 text-lg font-medium text-white hover:text-[#b8e1dd]"
                   >
-                    <span>Services</span>
+                    Services
                   </NavLink>
-
-                  {/* Always-visible subheadings with unique pages */}
-                  <div className="pl-5 mt-4 space-y-4">
-                    <NavLink
-                      to="/Services/Development"
-                      onClick={() => setOpen(false)}
-                      className="block text-white text-md hover:text-[#b8e1dd] transition-colors duration-300"
-                    >
-                      Software Development
-                    </NavLink>
-                    <NavLink
-                      to="/Services/Digital_Marketing"
-                      onClick={() => setOpen(false)}
-                      className="block text-white text-md hover:text-[#b8e1dd] transition-colors duration-300"
-                    >
-                      Digital Marketing
-                    </NavLink>
-                    <NavLink
-                      to="/Services/HR_Consulting"
-                      onClick={() => setOpen(false)}
-                      className="block text-white text-md hover:text-[#b8e1dd] transition-colors duration-300"
-                    >
-                      HR Consulting
-                    </NavLink>
-                    <NavLink
-                      to="/Services/PayRoll"
-                      onClick={() => setOpen(false)}
-                      className="block text-white text-md hover:text-[#b8e1dd] transition-colors duration-300"
-                    >
-                      Payroll Service
-                    </NavLink>
+                  <div className="pl-4 mt-2 space-y-1">
+                    {services.map((service) => (
+                      <NavLink
+                        key={service.title}
+                        to={service.path}
+                        onClick={() => setOpen(false)}
+                        className="block py-2 text-base text-gray-300 hover:text-white rounded-md hover:bg-white/10"
+                      >
+                        {service.title}
+                      </NavLink>
+                    ))}
                   </div>
                 </div>
+              </motion.div>
 
-                {/* Other mobile links */}
-                <NavLink to="/Job-seeker" onClick={() => setOpen(false)} className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300">Job Seeker</NavLink>
-                <NavLink to="/Career" onClick={() => setOpen(false)} className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300">Career</NavLink>
-                <NavLink to="/Testimonial" onClick={() => setOpen(false)} className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300">Testimonial</NavLink>
-                <NavLink to="/Contact" onClick={() => setOpen(false)} className="block py-4 text-lg border-b border-white/20 text-white hover:text-[#b8e1dd] transition-colors duration-300">Contact</NavLink>
+
+                <motion.div variants={mobileLinkVariants}><NavLink to="/Job-seeker" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">Job Seeker</NavLink></motion.div>
+                <motion.div variants={mobileLinkVariants}><NavLink to="/Career" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">Career</NavLink></motion.div>
+                <motion.div variants={mobileLinkVariants}><NavLink to="/Testimonial" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">Testimonial</NavLink></motion.div>
+                <motion.div variants={mobileLinkVariants}><NavLink to="/Contact" onClick={() => setOpen(false)} className="block border-b border-white/20 py-3">Contact</NavLink></motion.div>
+              </motion.div>
+
+              <div className="mt-auto p-6 space-y-3 text-sm">
+                <a href="tel:8190901250" className="flex items-center gap-2"><FaPhoneAlt /> +91 8190901250</a>
+                <a href="mailto:connect@primesourcellp.com" className="flex items-center gap-2"><FaEnvelope /> connect@primesourcellp.com</a>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-8">
-          <NavLink to="/Home" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Home</NavLink>
-          <NavLink to="/About" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>About</NavLink>
-          
-          {/* Services Dropdown */}
-          <div className="relative inline-block" onMouseEnter={() => setServicesOpen(true)} onMouseLeave={() => setServicesOpen(false)}>
-            <NavLink to="/Services" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Services</NavLink>
-            {servicesOpen && (
-              <div className="absolute bg-white shadow-lg rounded-md w-64 text-black">
-
-                {/* Software Development */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setSoftwareOpen(true)}
-                  onMouseLeave={() => setSoftwareOpen(false)}
-                >
-                  <NavLink
-                    to="/Services/Development"
-                    className="flex justify-between items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    Software Development ▸
-                  </NavLink>
-
-                  {softwareOpen && (
-                    <div className="absolute left-full top-0 bg-white shadow-lg rounded-md w-64 px-4 py-2">
-                      <NavLink
-                        to="/Services/Web_Development"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Website Development 
-                      </NavLink>
-                      <NavLink
-                        to="/Services/Development"
-                        className="block py-2 hover:bg-gray-100"
-                      >
-                        Web Application Development
-                      </NavLink>
-                      <NavLink
-                        to="/Services/Development"
-                        className="block py-2 hover:bg-gray-100"
-                      >
-                        Mobile Application (iOS & Android)
-                      </NavLink>
-                    </div>
-                  )}
-                </div>
-
-                {/* Digital Marketing */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setDigitalOpen(true)}
-                  onMouseLeave={() => setDigitalOpen(false)}
-                >
-                  <NavLink
-                    to="/Services/Digital_Marketing"
-                    className="flex justify-between items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    Digital Marketing ▸
-                  </NavLink>
-
-                  {digitalOpen && (
-                    <div className="absolute left-full top-0 bg-white shadow-lg rounded-md w-64 px-4 py-2">
-                      <NavLink
-                        to="/Services/Digital_Marketing/SEO"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Search Engine Optimization
-                      </NavLink>
-                     
-                      <NavLink
-                        to="/Services/Digital_Marketing/Social"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Social Media Marketing
-                      </NavLink>
-                      <NavLink
-                        to="/Services/Digital_Marketing/SEM"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Search Engine Marketing
-                      </NavLink>
-                      <NavLink
-                        to="/Services/Digital_Marketing/Content"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Content writing
-                      </NavLink>
-                    </div>
-                  )}
-                </div>
-
-                {/* HR Consulting */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setHrOpen(true)}
-                  onMouseLeave={() => setHrOpen(false)}
-                >
-                  <NavLink
-                    to="/Services/HR_consulting"
-                    className="flex justify-between items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    HR Consulting ▸
-                  </NavLink>
-
-                  {hrOpen && (
-                    <div className="absolute left-full top-0 bg-white shadow-lg rounded-md w-64 px-4 py-2">
-                      <NavLink
-                        to="/Services/Development"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Global recruitment
-                      </NavLink>
-                      <NavLink
-                        to="/Services/HR_consulting"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Staffing service
-                      </NavLink>
-                      <NavLink
-                        to="/Services/HR_consulting"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Contract staffing
-                      </NavLink>
-                    </div>
-                  )}
-                </div>
-
-                {/* Payroll Service */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setPayrollOpen(true)}
-                  onMouseLeave={() => setPayrollOpen(false)}
-                >
-                  <NavLink
-                    to="/Services/PayRoll"
-                    className="flex justify-between items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    Payroll Service ▸
-                  </NavLink>
-
-                  {payrollOpen && (
-                    <div className="absolute left-full top-0 bg-white shadow-lg rounded-md w-64 px-4 py-2">
-                      <NavLink
-                        to="/Services/PayRoll"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        HR Payroll Management
-                      </NavLink>
-                      <NavLink
-                        to="/Services/Development"
-                        className="block py-1 hover:bg-gray-100"
-                      >
-                        Payroll Outsourcing
-                      </NavLink>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            )}
-          </div>
-
-          <NavLink to="/Career" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Career</NavLink>
-          <div className="relative inline-block" onMouseEnter={() => setJobSeekerOpen(true)} onMouseLeave={() => setJobSeekerOpen(false)}>
-            <NavLink to="/Job-seeker" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Job Seeker</NavLink>
-            {jobSeekerOpen && (
-              <div className="absolute bg-white shadow-lg rounded-md w-64 text-black">
-                <span className="block px-4 py-2">Apply for job</span>
-              </div>
-            )}
-          </div>
-          <NavLink to="/Testimonial" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Testimonial</NavLink>
-          <NavLink to="/Contact" className={({ isActive }) => `hover:text-[#b8e1dd] ${isActive ? "text-[#b8e1dd] font-bold" : ""}`} style={textColorStyle}>Contact</NavLink>
-        </div>
-      </div>
-    </nav>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

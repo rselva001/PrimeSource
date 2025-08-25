@@ -108,7 +108,7 @@ export default function Footer() {
               <Link to="/Services/Development" className="font-semibold text-[#B8E1DD] text-sm mb-2">Software Development</Link>
               <ul className="space-y-3 pl-2">
                 <li>
-                  <Link to="/Services/Web_Development" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-2">
+                  <Link to="/Services/Development" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-2">
                     Website Development
                   </Link>
                 </li>
@@ -130,22 +130,22 @@ export default function Footer() {
               <Link to="/Services/Digital_Marketing"className="font-semibold text-[#B8E1DD] text-sm mb-2">Digital Marketing</Link>
               <ul className="space-y-2 pl-2">
                 <li>
-                  <Link to="/Services/Digital_Marketing/SEO" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
+                  <Link to="/Services/Digital_Marketing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
                     Search Engine Optimization
                   </Link>
                 </li>
                 <li>
-                  <Link to="/Services/Digital_Marketing/Content" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-0">
+                  <Link to="/Services/Digital_Marketing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-0">
                     Content Writing
                   </Link>
                 </li>
                 <li>
-                  <Link to="/Services/Digital_Marketing/Social" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
+                  <Link to="/Services/Digital_Marketing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
                     Social Media Marketing
                   </Link>
                 </li>
                 <li>
-                  <Link to="/Services/Digital_Marketing/SEM" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
+                  <Link to="/Services/Digital_Marketing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
                     Search Engine Marketing
                   </Link>
                 </li>
@@ -154,15 +154,15 @@ export default function Footer() {
             
             {/* HR Consulting Services */}
             <div className="mb-4">
-              <Link to ="/Services/HR_consulting" className="font-semibold text-[#B8E1DD] text-sm mb-2">HR Consulting</Link>
+              <Link to ="/Services/HR_Consulting" className="font-semibold text-[#B8E1DD] text-sm mb-2">HR Consulting</Link>
               <ul className="space-y-2 pl-2">
                 <li>
-                  <Link to="/Services/Global" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
+                  <Link to="/Services/HR_Consulting" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
                     Global Recruitment
                   </Link>
                 </li>
                 <li>
-                  <Link to="/Services/Staffing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
+                  <Link to="/Services/HR_Consulting" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
                     Staffing Service
                   </Link>
                 </li>
@@ -174,12 +174,12 @@ export default function Footer() {
               <Link to="/Services/PayRoll" className="font-semibold text-[#B8E1DD] text-sm mb-2">Payroll Services</Link>
               <ul className="space-y-2 pl-2">
                 <li>
-                  <Link to="/Services/HR_Payroll" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
+                  <Link to="/Services/PayRoll" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-3">
                     HR Payroll Management
                   </Link>
                 </li>
                 <li>
-                  <Link to="/Services/Payroll_Outsourcing" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
+                  <Link to="/Services/PayRoll" className="text-xs hover:text-[#3A9188] transition-colors duration-300 block py-1">
                     Payroll Outsourcing
                   </Link>
                 </li>
